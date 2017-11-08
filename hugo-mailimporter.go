@@ -2,6 +2,8 @@ package main
 
 import (
   "bufio"
+  "crypto/md5"
+  "encoding/hex"
   "fmt"
   "io"
   "io/ioutil"
@@ -29,11 +31,18 @@ func jis_to_utf8(str string) (string, error) {
   return string(ret), err
 }
 
+func GetMD5Hash(text string) string {
+  hasher := md5.New()
+  hasher.Write([]byte(text))
+  return hex.EncodeToString(hasher.Sum(nil))
+}
+
 func main() {
   type FrontMatter struct {
     From string `toml:"from"`
     Title string `toml:"title"`
     Date string `toml:"date"`
+    PostId string `toml:"post_id"`
   }
 
   // https://stackoverflow.com/questions/35097318/email-subject-header-decoding-in-different-charset-like-iso-2022-jp-gb-2312-e
@@ -47,12 +56,21 @@ func main() {
   msg, _ := email.ParseMessage(reader)
   dec := mime.WordDecoder{CharsetReader: CharsetReader}
 
+  post_id := ""
+  _, ok := msg.Header["Message-Id"]
+  if ok {
+    message_id := msg.Header["Message-Id"][0]
+    post_id = GetMD5Hash(message_id)
+  } else {
+    post_id = GetMD5Hash(string(msg.Body))
+  }
+
   fmt.Println("---")
   from, _ := dec.DecodeHeader(msg.Header["From"][0])
   title, _ := dec.DecodeHeader(msg.Header["Subject"][0])
   date, _ := mail.ParseDate(msg.Header["Date"][0])
   date_str := date.Format(time.RFC3339)
-  fm := FrontMatter{From: from, Title: title, Date: date_str}
+  fm := FrontMatter{From: from, Title: title, Date: date_str, PostId: post_id}
   b, err := toml.Marshal(fm)
   if err != nil {
     log.Fatal(err)
