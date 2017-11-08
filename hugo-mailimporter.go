@@ -60,14 +60,20 @@ func main() {
       log.Fatal(err)
     }
     fmt.Println(mediaType, params)
+    firstPlainBody := ""
     switch mediaType {
     case "text/plain":
-      messageBody = string(part.Body)
-      charset, ok := params["charset"]
-      if ok {
-        switch charset {
-        case "iso-2022-jp":
-          messageBody, _ = jis_to_utf8(messageBody)
+      if firstPlainBody == "" {
+        firstPlainBody = string(part.Body)
+        charset, ok := params["charset"]
+        if ok {
+          switch charset {
+          case "iso-2022-jp", "ISO-2022-JP":
+            messageBody, err = jis_to_utf8(firstPlainBody)
+            if err != nil {
+              log.Fatal(err)
+            }
+          }
         }
       }
     }
