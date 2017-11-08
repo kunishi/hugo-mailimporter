@@ -11,7 +11,6 @@ import (
   "mime"
   "net/mail"
   "os"
-  "regexp"
   "strings"
   "time"
   "github.com/pelletier/go-toml"
@@ -54,7 +53,25 @@ func main() {
 
   reader := bufio.NewReader(os.Stdin)
   msg, _ := email.ParseMessage(reader)
-  dec := mime.WordDecoder{CharsetReader: CharsetReader}
+  messageBody := string(msg.Body)
+  for _, part := range msg.MessagesAll() {
+    mediaType, params, err := part.Header.ContentType()
+    if err != nil {
+      log.Fatal(err)
+    }
+    fmt.Println(mediaType, params)
+    switch mediaType {
+    case "text/plain":
+      messageBody = string(part.Body)
+      charset, ok := params["charset"]
+      if ok {
+        switch charset {
+        case "iso-2022-jp":
+          messageBody, _ = jis_to_utf8(messageBody)
+        }
+      }
+    }
+  }
 
   post_id := ""
   _, ok := msg.Header["Message-Id"]
@@ -65,6 +82,7 @@ func main() {
     post_id = GetMD5Hash(string(msg.Body))
   }
 
+  dec := mime.WordDecoder{CharsetReader: CharsetReader}
   fmt.Println("---")
   from, _ := dec.DecodeHeader(msg.Header["From"][0])
   title, _ := dec.DecodeHeader(msg.Header["Subject"][0])
@@ -76,13 +94,7 @@ func main() {
     log.Fatal(err)
   }
   fmt.Println(string(b) + "---")
-
-  content_type := msg.Header["Content-Type"][0]
-  r := regexp.MustCompile(`[Ii][Ss][Oo]-2022-[Jj][Pp]`)
-  if r.MatchString(content_type) {
-    body, _ := jis_to_utf8(string(msg.Body))
-    fmt.Println(body)
-  } else {
-    fmt.Println(string(msg.Body))
-  } 
+  fmt.Println("<pre>")
+  fmt.Println(messageBody)
+  fmt.Println("</pre>")
 }
