@@ -1,5 +1,3 @@
-bin/
-pkg/
 ### https://raw.github.com/github/gitignore/fad779220742a6d54ccfc0c1a0e5b3d820253de6/Go.gitignore
 
 # Binaries for programs and plugins
@@ -17,4 +15,4 @@ pkg/
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-
+hugo-mailimporter
