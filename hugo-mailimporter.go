@@ -103,8 +103,9 @@ func main() {
               name = attachment_id
             }
             ext, _ := mime.ExtensionsByType(mediaType)
-            attachments[attachment_id] = 
-              Attachment{Name: name, Filename: attachment_id + ext[0]}
+            if ext != nil {
+              attachments[attachment_id] = Attachment{Name: name, Filename: attachment_id + ext[0]}
+            }
           }
         }
       default:
@@ -119,8 +120,9 @@ func main() {
             name = attachment_id
           }
           ext, _ := mime.ExtensionsByType(mediaType)
-          attachments[attachment_id] = 
-            Attachment{Name: name, Filename: attachment_id + ext[0]}
+          if ext != nil {
+            attachments[attachment_id] = Attachment{Name: name, Filename: attachment_id + ext[0]}
+          }
         }
       }
     }
