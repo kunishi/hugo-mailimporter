@@ -51,7 +51,7 @@ func GetMD5Hash(text string) string {
 
 func HTMLBodyExtractor(html string) (string) {
   doc, _ := goquery.NewDocumentFromReader(strings.NewReader(html))
-  content := doc.Find("body").Text()
+  content, _ := doc.Find("body").Html()
   return content
 }
 
@@ -116,18 +116,18 @@ func MailConverter(aMail string) (string) {
   result += fmt.Sprintf("%s", string(b))
   result += fmt.Sprintln("---")
 
-  result += fmt.Sprintln("<pre>")
   if len(msg.HTML) != 0 {
     result += fmt.Sprintln(HTMLBodyExtractor(msg.HTML))
   } else {
+    result += fmt.Sprintln("<pre>")
     if msg.GetHeader("MIME-Version") != "" {
       result += fmt.Sprintln(msg.Text)
     } else {
       string_jis, _ := jis_to_utf8(msg.Text)
       result += fmt.Sprintln(string_jis)
     }
+    result += fmt.Sprintln("</pre>")
   }
-  result += fmt.Sprintln("</pre>")
 
   return result
 }
