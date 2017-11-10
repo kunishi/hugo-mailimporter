@@ -15,6 +15,7 @@ import (
   "time"
   "github.com/pelletier/go-toml"
   "github.com/jhillyerd/enmime"
+  "github.com/PuerkitoBio/goquery"
   "golang.org/x/text/encoding/japanese"
   "golang.org/x/text/transform"
 )
@@ -46,6 +47,12 @@ func GetMD5Hash(text string) string {
   hasher := md5.New()
   hasher.Write([]byte(text))
   return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func HTMLBodyExtractor(html string) (string) {
+  doc, _ := goquery.NewDocumentFromReader(strings.NewReader(html))
+  content := doc.Find("body").Text()
+  return content
 }
 
 func MailConverter(aMail string) (string) {
@@ -109,18 +116,18 @@ func MailConverter(aMail string) (string) {
   result += fmt.Sprintf("%s", string(b))
   result += fmt.Sprintln("---")
 
+  result += fmt.Sprintln("<pre>")
   if len(msg.HTML) != 0 {
-    result += fmt.Sprintln(msg.HTML)
+    result += fmt.Sprintln(HTMLBodyExtractor(msg.HTML))
   } else {
-    result += fmt.Sprintln("<pre>")
     if msg.GetHeader("MIME-Version") != "" {
       result += fmt.Sprintln(msg.Text)
     } else {
       string_jis, _ := jis_to_utf8(msg.Text)
       result += fmt.Sprintln(string_jis)
     }
-    result += fmt.Sprintln("</pre>")
   }
+  result += fmt.Sprintln("</pre>")
 
   return result
 }

@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  name = "github.com/PuerkitoBio/goquery"
+  packages = ["."]
+  revision = "e1271ee34c6a305e38566ecd27ae374944907ee9"
+  version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/andybalholm/cascadia"
+  packages = ["."]
+  revision = "349dd0209470eabd9514242c688c403c0926d266"
+
+[[projects]]
   branch = "master"
   name = "github.com/jaytaylor/html2text"
   packages = ["."]
@@ -52,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "68c84e4b1dd704064b951b6c2b2a2f0b425dcc64899a8206ecd945408cb520d7"
+  inputs-digest = "09ad452d5e9a007232d7daaa4cd12455cf2d9c5a8b7a002bd0b2e9827f138bab"
   solver-name = "gps-cdcl"
   solver-version = 1
