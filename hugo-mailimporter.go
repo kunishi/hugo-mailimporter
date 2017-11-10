@@ -61,10 +61,8 @@ func MailConverter(aMail string) (string) {
 
   attachments := make(map[string]Attachment)
   for _, attach := range msg.Attachments {
-    fmt.Println("attached:", attach.FileName)
     content, _ := ioutil.ReadAll(attach)
     attach_id := GetMD5Hash(base64.StdEncoding.EncodeToString(content))
-    fmt.Println("attach_id:", attach_id)
 
     filename := ""
     ext, _ := mime.ExtensionsByType(attach.ContentType)
