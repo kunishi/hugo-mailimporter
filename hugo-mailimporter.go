@@ -2,12 +2,15 @@ package main
 
 import (
   "crypto/md5"
+  "encoding/base64"
   "encoding/hex"
   "fmt"
   "io/ioutil"
   "log"
+  "mime"
   "net/mail"
   "os"
+  "path/filepath"
   "strings"
   "time"
   "github.com/pelletier/go-toml"
@@ -18,7 +21,7 @@ import (
 
 type Attachment struct {
   Name string `toml:"name"`
-  Filename string `toml:"filename"`
+  FileName string `toml:"filename"`
 }
 
 type FrontMatter struct {
@@ -57,65 +60,27 @@ func MailConverter(aMail string) (string) {
   }
 
   attachments := make(map[string]Attachment)
-  //firstPlainBody := ""
-  //for _, part := range msg.MessagesAll() {
-  // if part != nil {
-  //   mediaType, params, err := part.Header.ContentType()
-  //   switch mediaType {
-  //   case "text/plain":
-  //     if firstPlainBody == "" {
-  //       firstPlainBody = string(part.Body)
-  //       charset, ok := params["charset"]
-  //       if ok {
-  //         switch charset {
-  //         case "iso-2022-jp", "ISO-2022-JP":
-  //           messageBody, err = jis_to_utf8(firstPlainBody)
-  //           if err != nil {
-  //             log.Fatal(err)
-  //           }
-  //         default:
-  //           messageBody = firstPlainBody
-  //         }
-  //       }
-  //     } else {
-  //       _, params, err := part.Header.ContentDisposition()
-  //       if err == nil {
-  //         attachment_id := GetMD5Hash(string(part.Body))
-  //         name := ""
-  //         _, ok := params["filename"]
-  //         if ok {
-  //           name, err = dec.DecodeHeader(params["filename"])
-  //           if err != nil {
-  //             log.Fatal(err)
-  //           }
-  //         } else {
-  //           name = attachment_id
-  //         }
-  //         ext, _ := mime.ExtensionsByType(mediaType)
-  //         if ext != nil {
-  //           attachments[attachment_id] = Attachment{Name: name, Filename: attachment_id + ext[0]}
-  //         }
-  //       }
-  //     }
-  //   default:
-  //     attachType, params, err := part.Header.ContentDisposition()
-  //     if err == nil && attachType == "attachment" {
-  //       attachment_id := GetMD5Hash(string(part.Body))
-  //       name := ""
-  //       _, ok := params["filename"]
-  //       if ok {
-  //         name, _ = dec.DecodeHeader(params["filename"])
-  //       } else {
-  //         name = attachment_id
-  //       }
-  //       ext, _ := mime.ExtensionsByType(mediaType)
-  //       if ext != nil {
-  //         attachments[attachment_id] = Attachment{Name: name, Filename: attachment_id + ext[0]}
-  //       }
-  //     }
-  //   }
-  // }
-  //}
+  for _, attach := range msg.Attachments {
+    fmt.Println("attached:", attach.FileName)
+    content, _ := ioutil.ReadAll(attach)
+    attach_id := GetMD5Hash(base64.StdEncoding.EncodeToString(content))
+    fmt.Println("attach_id:", attach_id)
+
+    filename := ""
+    ext, _ := mime.ExtensionsByType(attach.ContentType)
+    if ext != nil {
+      if attach.ContentType == "application/octet-stream" && filepath.Ext(attach.FileName) == ".pdf" {
+        filename = attach_id + ".pdf"
+      } else {
+        filename = attach_id + ext[0]
+      }
+      attachments[attach_id] = Attachment{Name: attach.FileName, FileName: filename}
+    }
+    //err := ioutil.WriteFile(attach.FileName, content, 0644)
+    //if err != nil {
+    //  log.Fatal(err)
+    //}
+  }
 
   post_id := ""
   message_id := msg.GetHeader("Message-Id")
