@@ -30,6 +30,7 @@ type FrontMatter struct {
   Title string `toml:"title"`
   Date string `toml:"date"`
   PostId string `toml:"post_id"`
+  Type string `toml:"type"`
   Attachments map[string]Attachment
 }
 
@@ -114,6 +115,7 @@ func MailConverter(aMail string) (string, string) {
     Title: title,
     Date: date_str,
     PostId: post_id,
+    Type: "ml_archive",
     Attachments: attachments,
   }
   b, err := toml.Marshal(fm)
