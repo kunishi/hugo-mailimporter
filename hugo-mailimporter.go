@@ -55,7 +55,11 @@ func HTMLBodyExtractor(html string) (string) {
   return content
 }
 
-func MailConverter(aMail string) (string) {
+func MailConverter(aMail string) (string, string) {
+  basedir := "../dbjapan-hugo/"
+  content_dir := basedir + "content/ml_archives/"
+  assets_dir := basedir + "static/assets/ml_archives/"
+
   r, err := os.Open(aMail)
   if err != nil {
     log.Fatal(err)
@@ -64,6 +68,14 @@ func MailConverter(aMail string) (string) {
   msg, err := enmime.ReadEnvelope(r)
   if err != nil {
     log.Fatal(err)
+  }
+
+  post_id := ""
+  message_id := msg.GetHeader("Message-Id")
+  if message_id != "" {
+    post_id = GetMD5Hash(message_id)
+  } else {
+    post_id = GetMD5Hash(msg.Text)
   }
 
   attachments := make(map[string]Attachment)
@@ -80,23 +92,18 @@ func MailConverter(aMail string) (string) {
         filename = attach_id + ext[0]
       }
       attachments[attach_id] = Attachment{Name: attach.FileName, FileName: filename}
-    }
-    //err := ioutil.WriteFile(attach.FileName, content, 0644)
-    //if err != nil {
-    //  log.Fatal(err)
-    //}
-  }
 
-  post_id := ""
-  message_id := msg.GetHeader("Message-Id")
-  if message_id != "" {
-    post_id = GetMD5Hash(message_id)
-  } else {
-    post_id = GetMD5Hash(msg.Text)
+      attach_dir := assets_dir + "/" + post_id
+      os.MkdirAll(attach_dir, os.ModePerm)
+      err := ioutil.WriteFile(attach_dir + "/" + filename, content, 0644)
+      if err != nil {
+        log.Fatal(err)
+      }
+    }
   }
 
   result := ""
-  result += fmt.Sprintln("---")
+  result += fmt.Sprintln("+++")
 
   from := msg.GetHeader("From")
   title := msg.GetHeader("Subject")
@@ -114,7 +121,7 @@ func MailConverter(aMail string) (string) {
     log.Fatal(err)
   }
   result += fmt.Sprintf("%s", string(b))
-  result += fmt.Sprintln("---")
+  result += fmt.Sprintln("+++")
 
   if len(msg.HTML) != 0 {
     result += fmt.Sprintln(HTMLBodyExtractor(msg.HTML))
@@ -129,11 +136,22 @@ func MailConverter(aMail string) (string) {
     result += fmt.Sprintln("</pre>")
   }
 
-  return result
+  os.MkdirAll(content_dir, os.ModePerm)
+  f, err := os.Create(content_dir + "/" + post_id + ".md")
+  if err != nil {
+    log.Fatal(err)
+  }
+  _, err = f.WriteString(result)
+  if err != nil {
+    log.Fatal(err)
+  }
+  
+  return post_id, result
 }
 
 func main() {
   for _, mail := range os.Args[1:] {
-    fmt.Print(MailConverter(mail))
+    post_id, _ := MailConverter(mail)
+    fmt.Println(mail, post_id)
   }
 }
