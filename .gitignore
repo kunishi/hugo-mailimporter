@@ -20,3 +20,4 @@ vendor/
 
 hugo-mailimporter
 result*.txt
+config.toml

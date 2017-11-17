@@ -56,10 +56,10 @@ func HTMLBodyExtractor(html string) (string) {
   return content
 }
 
-func MailConverter(aMail string) (string, string) {
-  basedir := "../dbjapan-hugo/"
-  content_dir := basedir + "content/ml_archives/"
-  assets_dir := basedir + "static/assets/ml_archives/"
+func MailConverter(aMail string, config *toml.Tree) (string, string) {
+  basedir := config.Get("basedir").(string)
+  content_dir := basedir + config.Get("content_dir").(string)
+  assets_dir := basedir + config.Get("assets_dir").(string)
 
   r, err := os.Open(aMail)
   if err != nil {
@@ -115,7 +115,7 @@ func MailConverter(aMail string) (string, string) {
     Title: title,
     Date: date_str,
     PostId: post_id,
-    Type: "ml_archive",
+    Type: config.Get("type").(string),
     Attachments: attachments,
   }
   b, err := toml.Marshal(fm)
@@ -152,8 +152,14 @@ func MailConverter(aMail string) (string, string) {
 }
 
 func main() {
+  config, err := toml.LoadFile("config.toml")
+  if err != nil {
+    log.Fatal(err)
+  }
+  hugoConfig := config.Get("Hugo").(*toml.Tree)
+
   for _, mail := range os.Args[1:] {
-    post_id, _ := MailConverter(mail)
+    post_id, _ := MailConverter(mail, hugoConfig)
     fmt.Println(mail, post_id)
   }
 }
