@@ -1,0 +1,5 @@
+[Hugo]
+basedir     = "/Users/kunishi/git/dbjapan-hugo/"
+posts_dir   = "content/ml_archives/"
+static_dir  = "static/assets/ml_archives/"
+type        = "ml_archive"
